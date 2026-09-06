@@ -8,6 +8,7 @@ import com.mapsyncer.network.payload.SyncProgressPayload;
 import com.mapsyncer.network.payload.SyncRequestPayload;
 import com.mapsyncer.network.payload.SyncRequestWireCodec;
 import com.mapsyncer.network.payload.SyncResponsePayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
 import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.ArrayList;
@@ -124,6 +125,26 @@ public class ForgePayloadAdapters {
 
         public static ForgeServerInstalledMessage decode(FriendlyByteBuf buf) {
             return new ForgeServerInstalledMessage(ServerInstalledWireCodec.read(buf));
+        }
+    }
+
+    public static class ForgeOreVeinSyncMessage {
+        private final OreVeinSyncPayload data;
+        public ForgeOreVeinSyncMessage(OreVeinSyncPayload data) { this.data = data; }
+        public OreVeinSyncPayload getData() { return data; }
+        public static void encode(ForgeOreVeinSyncMessage msg, FriendlyByteBuf buf) {
+            buf.writeInt(msg.data.batchIndex()); buf.writeInt(msg.data.totalBatches()); buf.writeBoolean(msg.data.complete()); buf.writeUtf(msg.data.status());
+            buf.writeInt(msg.data.veins().size());
+            for (OreVeinSyncPayload.OreVeinSnapshot v : msg.data.veins()) {
+                buf.writeUtf(v.id()); buf.writeUtf(v.dimension()); buf.writeInt(v.originChunkX()); buf.writeInt(v.originChunkZ());
+                buf.writeInt(v.centerX()); buf.writeInt(v.centerY()); buf.writeInt(v.centerZ()); buf.writeUtf(v.definitionId()); buf.writeBoolean(v.depleted());
+            }
+        }
+        public static ForgeOreVeinSyncMessage decode(FriendlyByteBuf buf) {
+            int batch=buf.readInt(), total=buf.readInt(); boolean complete=buf.readBoolean(); String status=buf.readUtf(); int n=buf.readInt();
+            List<OreVeinSyncPayload.OreVeinSnapshot> veins=new ArrayList<>();
+            for(int i=0;i<n;i++) veins.add(new OreVeinSyncPayload.OreVeinSnapshot(buf.readUtf(),buf.readUtf(),buf.readInt(),buf.readInt(),buf.readInt(),buf.readInt(),buf.readInt(),buf.readUtf(),buf.readBoolean()));
+            return new ForgeOreVeinSyncMessage(new OreVeinSyncPayload(veins,complete,status,batch,total));
         }
     }
 
