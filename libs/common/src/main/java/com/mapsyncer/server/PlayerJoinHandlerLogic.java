@@ -3,6 +3,8 @@ package com.mapsyncer.server;
 import com.mapsyncer.config.ModConfig;
 import com.mapsyncer.network.NetworkManager;
 import com.mapsyncer.network.payload.ServerInstalledPayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
+import com.mapsyncer.gtceu.GtceuVeinBridge;
 import com.mapsyncer.platform.PlatformManager;
 import com.mapsyncer.platform.UpdateMode;
 import net.minecraft.server.MinecraftServer;
@@ -11,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,6 +48,19 @@ public class PlayerJoinHandlerLogic {
         if (!ConversionOrchestrator.isRunning() && mode != UpdateMode.DISABLED) {
             IncrementalUpdateHandlerLogic.getInstance().start(server);
         }
+    }
+
+    public static void sendAllVeins(ServerPlayer player, MinecraftServer server) {
+        if (!GtceuVeinBridge.isAvailable()) return;
+        List<OreVeinSyncPayload.OreVeinSnapshot> veins = GtceuVeinBridge.all(server);
+        final int batchSize = 256;
+        int total = Math.max(1, (veins.size() + batchSize - 1) / batchSize);
+        for (int i = 0; i < total; i++) {
+            int from = i * batchSize, to = Math.min(from + batchSize, veins.size());
+            NetworkManager.sendToPlayer(player, new OreVeinSyncPayload(
+                    new ArrayList<>(veins.subList(from, to)), i == total - 1, "ok", i, total));
+        }
+        LOGGER.info("Sent {} GTCEu vein records to {} in {} batches", veins.size(), player.getGameProfile().getName(), total);
     }
 
     /**
