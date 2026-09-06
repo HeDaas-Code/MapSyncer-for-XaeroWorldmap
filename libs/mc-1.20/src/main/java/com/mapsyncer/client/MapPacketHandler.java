@@ -5,6 +5,8 @@ import com.mapsyncer.network.PayloadContext;
 import com.mapsyncer.network.payload.ChunkMapData;
 import com.mapsyncer.network.payload.SyncProgressPayload;
 import com.mapsyncer.network.payload.SyncResponsePayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
+import com.mapsyncer.gtceu.GtceuClientBridge;
 import com.mapsyncer.client.ClientSyncSession;
 import com.mapsyncer.sync.SyncOutcome;
 import com.mapsyncer.sync.SyncPhase;
@@ -237,6 +239,7 @@ public class MapPacketHandler {
 
         // 注册同步响应处理器
         handler.registerSyncResponseHandler(MapPacketHandler::handleSyncResponse);
+        handler.registerOreVeinSyncHandler((payload, context) -> context.enqueueWork(() -> GtceuClientBridge.apply(payload)));
 
         // 注册进度更新处理器
         handler.registerSyncProgressHandler(MapPacketHandler::handleProgressUpdate);
