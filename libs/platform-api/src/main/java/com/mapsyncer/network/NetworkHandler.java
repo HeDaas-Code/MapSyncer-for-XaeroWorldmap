@@ -4,6 +4,7 @@ import com.mapsyncer.network.payload.ServerInstalledPayload;
 import com.mapsyncer.network.payload.SyncProgressPayload;
 import com.mapsyncer.network.payload.SyncRequestPayload;
 import com.mapsyncer.network.payload.SyncResponsePayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
 
 import java.util.function.BiConsumer;
 
@@ -40,6 +41,8 @@ public interface NetworkHandler<PLAYER_TYPE, EVENT_TYPE> {
     String SYNC_PROGRESS_ID = "sync_progress";
     /** 服务端已安装通知包 ID */
     String SERVER_INSTALLED_ID = "server_installed";
+    /** GTCEu-compatible ore vein synchronization */
+    String ORE_VEIN_SYNC_ID = "ore_vein_sync";
 
     // ===== 初始化 =====
 
@@ -76,6 +79,9 @@ public interface NetworkHandler<PLAYER_TYPE, EVENT_TYPE> {
      * @param payload 同步进度包
      */
     void sendToPlayer(PLAYER_TYPE player, SyncProgressPayload payload);
+
+    /** Send a GTCEu-compatible vein batch to a player. */
+    void sendToPlayer(PLAYER_TYPE player, OreVeinSyncPayload payload);
 
     /**
      * 发送服务端已安装通知到指定玩家（服务端调用）
@@ -114,6 +120,8 @@ public interface NetworkHandler<PLAYER_TYPE, EVENT_TYPE> {
      * @param handler 处理函数
      */
     void registerSyncRequestHandler(BiConsumer<SyncRequestPayload, PayloadContext> handler);
+
+    void registerOreVeinSyncHandler(BiConsumer<OreVeinSyncPayload, PayloadContext> handler);
 
     // ===== 上下文操作 =====
 
