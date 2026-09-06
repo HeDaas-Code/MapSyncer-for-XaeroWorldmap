@@ -9,12 +9,14 @@ import com.mapsyncer.server.ConversionOrchestrator.DimensionCacheStats;
 import com.mapsyncer.server.ConversionOrchestrator.SingleRegionResult;
 import com.mapsyncer.util.ChatUtils;
 import com.mapsyncer.util.CommandPermissionHelper;
+import com.mapsyncer.gtceu.GtceuVeinBridge;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
@@ -54,6 +56,10 @@ public class CacheGenerateCommand {
                                                 .executes(CacheGenerateCommand::generateSingleRegion)))))
                 .then(Commands.literal("status")
                         .executes(CacheGenerateCommand::showStatus))
+                .then(Commands.literal("gtveins")
+                        .executes(CacheGenerateCommand::showGtceuVeinStatus)
+                        .then(Commands.literal("sync").executes(CacheGenerateCommand::syncGtceuVeins))
+                        .then(Commands.literal("clear").executes(CacheGenerateCommand::clearGtceuVeins)))
                 .then(Commands.literal("incremental")
                         .executes(CacheGenerateCommand::showIncrementalMode)
                         .then(Commands.literal("off")
@@ -179,6 +185,25 @@ public class CacheGenerateCommand {
         }
         ctx.getSource().sendSuccess(() -> ChatUtils.message("mapsyncer.command.generating_region", x, z, friendlyName), false);
 
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int showGtceuVeinStatus(CommandContext<CommandSourceStack> ctx) {
+        boolean available = GtceuVeinBridge.isAvailable();
+        ctx.getSource().sendSuccess(() -> ChatUtils.message("GTCEu bridge: " + (available ? "available" : "unavailable")), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int syncGtceuVeins(CommandContext<CommandSourceStack> ctx) {
+        ServerPlayer player = ctx.getSource().getPlayer();
+        if (player == null) { ctx.getSource().sendFailure(ChatUtils.error("Command must be executed by a player")); return 0; }
+        PlayerJoinHandlerLogic.sendAllVeins(player, ctx.getSource().getServer());
+        ctx.getSource().sendSuccess(() -> ChatUtils.message("GTCEu vein synchronization requested"), false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int clearGtceuVeins(CommandContext<CommandSourceStack> ctx) {
+        ctx.getSource().sendSuccess(() -> ChatUtils.message("GTCEu client markers can be refreshed by running /mapsyncer gtveins sync"), false);
         return Command.SINGLE_SUCCESS;
     }
 
