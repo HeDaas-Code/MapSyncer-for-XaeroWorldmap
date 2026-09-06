@@ -4,6 +4,7 @@ import com.mapsyncer.network.payload.ServerInstalledPayload;
 import com.mapsyncer.network.payload.SyncProgressPayload;
 import com.mapsyncer.network.payload.SyncRequestPayload;
 import com.mapsyncer.network.payload.SyncResponsePayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
 
 /**
  * 网络管理器 - 单例模式
@@ -89,6 +90,13 @@ public final class NetworkManager {
      * @param player 玩家对象
      * @param payload 同步进度包
      */
+    public static void sendToPlayer(Object player, OreVeinSyncPayload payload) {
+        @SuppressWarnings("unchecked")
+        NetworkHandler<Object, Object> handler = (NetworkHandler<Object, Object>) getHandler();
+        handler.sendToPlayer(player, payload);
+    }
+
+    /** Send progress to player. */
     public static void sendToPlayer(Object player, SyncProgressPayload payload) {
         @SuppressWarnings("unchecked")
         NetworkHandler<Object, Object> handler = (NetworkHandler<Object, Object>) getHandler();
