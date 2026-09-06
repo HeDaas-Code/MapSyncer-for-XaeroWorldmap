@@ -3,6 +3,7 @@ package com.mapsyncer;
 import com.mapsyncer.client.MapPacketHandler;
 import com.mapsyncer.client.MapPacketReceiver;
 import com.mapsyncer.config.ModConfig;
+import com.mapsyncer.debug.GtceuDebugWebServer;
 import com.mapsyncer.network.NetworkManager;
 import com.mapsyncer.network.impl.ForgeNetworkHandler;
 import com.mapsyncer.platform.Platform;
@@ -110,6 +111,9 @@ public class MapSyncer {
 
         DimensionRegistry.registerAllDimensions(event.getServer());
 
+        // Local read-only diagnostic endpoint for inspecting captured GTCEu veins.
+        GtceuDebugWebServer.start(event.getServer());
+
         // 根据配置启用/禁用 DEBUG 日志
         com.mapsyncer.util.ModLogConfig.applyDebugLogging();
 
@@ -124,6 +128,7 @@ public class MapSyncer {
     public void onServerStopping(ServerStoppingEvent event) {
         MinecraftForge.EVENT_BUS.unregister(this);
         IncrementalUpdateHandlerLogic.getInstance().stop();
+        GtceuDebugWebServer.stop();
     }
 
     @SubscribeEvent
