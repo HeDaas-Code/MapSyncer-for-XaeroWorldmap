@@ -8,10 +8,14 @@ import com.mapsyncer.network.ForgePayloadAdapters.ForgeSyncRequestMessage;
 import com.mapsyncer.network.ForgePayloadAdapters.ForgeSyncResponseMessage;
 import com.mapsyncer.network.ForgePayloadAdapters.ForgeSyncProgressMessage;
 import com.mapsyncer.network.ForgePayloadAdapters.ForgeServerInstalledMessage;
+import com.mapsyncer.network.ForgePayloadAdapters.ForgeOreVeinSyncMessage;
 import com.mapsyncer.network.payload.ServerInstalledPayload;
 import com.mapsyncer.network.payload.SyncProgressPayload;
 import com.mapsyncer.network.payload.SyncRequestPayload;
 import com.mapsyncer.network.payload.SyncResponsePayload;
+import com.mapsyncer.network.payload.OreVeinSyncPayload;
+import com.mapsyncer.server.PlayerJoinHandlerLogic;
+import com.mapsyncer.debug.GtceuDebugWebServer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
@@ -41,6 +45,7 @@ public class ForgeNetworkHandler implements NetworkHandler<ServerPlayer, Object>
     private BiConsumer<SyncProgressPayload, PayloadContext> syncProgressHandler;
     private BiConsumer<ServerInstalledPayload, PayloadContext> serverInstalledHandler;
     private BiConsumer<SyncRequestPayload, PayloadContext> syncRequestHandler;
+    private BiConsumer<OreVeinSyncPayload, PayloadContext> oreVeinSyncHandler;
 
     private boolean registered = false;
 
@@ -69,6 +74,8 @@ public class ForgeNetworkHandler implements NetworkHandler<ServerPlayer, Object>
                 ForgeSyncProgressMessage::decode,
                 this::handleSyncProgress);
 
+        CHANNEL.registerMessage(4, ForgeOreVeinSyncMessage.class, ForgeOreVeinSyncMessage::encode, ForgeOreVeinSyncMessage::decode, this::handleOreVeinSync);
+
         CHANNEL.registerMessage(3, ForgeServerInstalledMessage.class,
                 ForgeServerInstalledMessage::encode,
                 ForgeServerInstalledMessage::decode,
@@ -79,11 +86,14 @@ public class ForgeNetworkHandler implements NetworkHandler<ServerPlayer, Object>
         ServerPlayer sender = ctx.get().getSender();
         if (sender != null) {
             confirmPlayer(sender.getUUID());
+            PlayerJoinHandlerLogic.sendAllVeins(sender, sender.getServer());
         }
         if (syncRequestHandler != null) {
             syncRequestHandler.accept(msg.getData(), new PayloadContext(ctx));
         }
     }
+
+    private void handleOreVeinSync(ForgeOreVeinSyncMessage msg, Supplier<NetworkEvent.Context> ctx) { if (oreVeinSyncHandler != null) oreVeinSyncHandler.accept(msg.getData(), new PayloadContext(ctx)); }
 
     private void handleSyncResponse(ForgeSyncResponseMessage msg, Supplier<NetworkEvent.Context> ctx) {
         if (syncResponseHandler != null) {
@@ -122,6 +132,9 @@ public class ForgeNetworkHandler implements NetworkHandler<ServerPlayer, Object>
     }
 
     @Override
+    public void sendToPlayer(ServerPlayer player, OreVeinSyncPayload payload) { if (!confirmedPlayers.contains(player.getUUID())) return; GtceuDebugWebServer.publishBatch(payload); CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ForgeOreVeinSyncMessage(payload)); }
+
+    @Override
     public void sendToPlayer(ServerPlayer player, SyncProgressPayload payload) {
         if (!confirmedPlayers.contains(player.getUUID())) return;
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ForgeSyncProgressMessage(payload));
@@ -146,6 +159,9 @@ public class ForgeNetworkHandler implements NetworkHandler<ServerPlayer, Object>
     public void registerServerInstalledHandler(BiConsumer<ServerInstalledPayload, PayloadContext> handler) {
         this.serverInstalledHandler = handler;
     }
+
+    @Override
+    public void registerOreVeinSyncHandler(BiConsumer<OreVeinSyncPayload, PayloadContext> handler) { this.oreVeinSyncHandler = handler; }
 
     @Override
     public void registerSyncRequestHandler(BiConsumer<SyncRequestPayload, PayloadContext> handler) {
