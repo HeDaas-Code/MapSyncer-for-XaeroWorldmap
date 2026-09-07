@@ -26,7 +26,8 @@ public final class GtceuVeinBridge {
 
     public static List<OreVeinSyncPayload.OreVeinSnapshot> all(MinecraftServer server) {
         List<OreVeinSyncPayload.OreVeinSnapshot> out = new ArrayList<>();
-        if (!isAvailable() || server == null) return out;
+        if (server == null) return out;
+        if (!isAvailable()) return out;
         try {
             Class<?> cacheType = Class.forName(SERVER_CACHE);
             Field instanceField = cacheType.getField("instance");
