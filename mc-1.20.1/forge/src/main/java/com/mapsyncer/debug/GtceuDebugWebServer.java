@@ -37,6 +37,7 @@ public final class GtceuDebugWebServer {
         } catch (IOException e) { MapSyncer.LOGGER.warn("Could not start GTCEu debug web map: {}", e.toString()); server=null; }
     }
     private static void veins(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, -1); return; }
         List<OreVeinSyncPayload.OreVeinSnapshot> veins = lastCaptured;
         byte[] data=toJson(veins).getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type","application/json; charset=utf-8"); exchange.getResponseHeaders().set("Access-Control-Allow-Origin","*"); exchange.sendResponseHeaders(200,data.length); try(OutputStream o=exchange.getResponseBody()){o.write(data);}
@@ -51,6 +52,7 @@ public final class GtceuDebugWebServer {
         lastCaptureMs = System.currentTimeMillis();
     }
     private static void status(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, -1); return; }
         byte[] data=("{\"available\":"+GtceuVeinBridge.isAvailable()+",\"captured\":"+lastCaptured.size()+",\"ageMs\":"+(System.currentTimeMillis()-lastCaptureMs)+"}").getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type","application/json; charset=utf-8"); exchange.sendResponseHeaders(200,data.length); try(OutputStream o=exchange.getResponseBody()){o.write(data);}
     }
