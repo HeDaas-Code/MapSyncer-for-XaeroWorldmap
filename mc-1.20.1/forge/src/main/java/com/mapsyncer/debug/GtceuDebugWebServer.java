@@ -27,16 +27,17 @@ public final class GtceuDebugWebServer {
         minecraftServer = mcServer;
         try {
             int port = Integer.getInteger("mapsyncer.debugWebPort", 25567);
-            server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
+            server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
             server.createContext("/api/veins", GtceuDebugWebServer::veins);
             server.createContext("/api/status", GtceuDebugWebServer::status);
             server.createContext("/", GtceuDebugWebServer::index);
             server.setExecutor(Executors.newCachedThreadPool(r -> { Thread t=new Thread(r,"mapsyncer-debug-web"); t.setDaemon(true); return t; }));
             server.start();
-            MapSyncer.LOGGER.info("GTCEu debug web map listening at http://127.0.0.1:{}/", port);
+            MapSyncer.LOGGER.info("GTCEu debug web map listening on 0.0.0.0:{} (HTTP)", port);
         } catch (IOException e) { MapSyncer.LOGGER.warn("Could not start GTCEu debug web map: {}", e.toString()); server=null; }
     }
     private static void veins(HttpExchange exchange) throws IOException {
+        MapSyncer.LOGGER.info("Web request {} {}", exchange.getRequestMethod(), exchange.getRequestURI());
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, -1); return; }
         List<OreVeinSyncPayload.OreVeinSnapshot> veins = lastCaptured;
         byte[] data=toJson(veins).getBytes(StandardCharsets.UTF_8);
@@ -52,11 +53,13 @@ public final class GtceuDebugWebServer {
         lastCaptureMs = System.currentTimeMillis();
     }
     private static void status(HttpExchange exchange) throws IOException {
+        MapSyncer.LOGGER.info("Web request {} {}", exchange.getRequestMethod(), exchange.getRequestURI());
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) { exchange.sendResponseHeaders(405, -1); return; }
         byte[] data=("{\"available\":"+GtceuVeinBridge.isAvailable()+",\"captured\":"+lastCaptured.size()+",\"ageMs\":"+(System.currentTimeMillis()-lastCaptureMs)+"}").getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type","application/json; charset=utf-8"); exchange.sendResponseHeaders(200,data.length); try(OutputStream o=exchange.getResponseBody()){o.write(data);}
     }
     private static void index(HttpExchange exchange) throws IOException {
+        MapSyncer.LOGGER.info("Web request {} {}", exchange.getRequestMethod(), exchange.getRequestURI());
         byte[] data=WEB.getBytes(StandardCharsets.UTF_8); exchange.getResponseHeaders().set("Content-Type","text/html; charset=utf-8"); exchange.sendResponseHeaders(200,data.length); try(OutputStream o=exchange.getResponseBody()){o.write(data);}
     }
     public static synchronized void stop(){ if(server!=null){server.stop(0);server=null;} minecraftServer=null; lastCaptured=Collections.emptyList(); lastCaptureMs=0; }
