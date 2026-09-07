@@ -107,11 +107,7 @@ public class MapSyncer {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // 内置服务器：复用 Xaero 客户端地图目录作缓存
-        try { ConversionOrchestrator.tryInitIntegratedServerCache(event.getServer(), FMLPaths.GAMEDIR.get()); } catch (Throwable error) { LOGGER.warn("Map cache integration unavailable; continuing", error); }
-
-        try { DimensionRegistry.registerAllDimensions(event.getServer()); } catch (Throwable error) { LOGGER.warn("Dimension registry integration unavailable; continuing", error); }
-
-        // Local read-only diagnostic endpoint for inspecting captured GTCEu veins.
+        // Optional cache/dimension integrations are disabled for runtime compatibility.
         try { GtceuDebugWebServer.start(event.getServer()); } catch (Throwable error) { LOGGER.warn("GTCEu web map startup failed; continuing", error); }
 
         // 根据配置启用/禁用 DEBUG 日志
