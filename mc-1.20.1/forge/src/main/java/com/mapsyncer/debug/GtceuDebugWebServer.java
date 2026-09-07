@@ -26,7 +26,7 @@ public final class GtceuDebugWebServer {
         if (server != null) return;
         minecraftServer = mcServer;
         try {
-            int port = Integer.getInteger("mapsyncer.debugWebPort", 8765);
+            int port = Integer.getInteger("mapsyncer.debugWebPort", 25567);
             server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
             server.createContext("/api/veins", GtceuDebugWebServer::veins);
             server.createContext("/api/status", GtceuDebugWebServer::status);
