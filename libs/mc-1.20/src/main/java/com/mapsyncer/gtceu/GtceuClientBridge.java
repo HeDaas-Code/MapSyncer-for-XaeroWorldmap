@@ -11,6 +11,7 @@ public final class GtceuClientBridge {
     private static final Logger LOGGER = LoggerFactory.getLogger(GtceuClientBridge.class);
     private GtceuClientBridge() {}
     public static int apply(OreVeinSyncPayload payload) {
+        if (payload == null || payload.veins() == null) return 0;
         int applied=0;
         for (OreVeinSyncPayload.OreVeinSnapshot vein : payload.veins()) {
             if (applyWaypoint(vein)) applied++;
