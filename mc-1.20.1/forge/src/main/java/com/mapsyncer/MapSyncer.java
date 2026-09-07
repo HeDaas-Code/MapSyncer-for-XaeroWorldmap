@@ -107,12 +107,12 @@ public class MapSyncer {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // 内置服务器：复用 Xaero 客户端地图目录作缓存
-        ConversionOrchestrator.tryInitIntegratedServerCache(event.getServer(), FMLPaths.GAMEDIR.get());
+        try { ConversionOrchestrator.tryInitIntegratedServerCache(event.getServer(), FMLPaths.GAMEDIR.get()); } catch (Throwable error) { LOGGER.warn("Map cache integration unavailable; continuing", error); }
 
-        DimensionRegistry.registerAllDimensions(event.getServer());
+        try { DimensionRegistry.registerAllDimensions(event.getServer()); } catch (Throwable error) { LOGGER.warn("Dimension registry integration unavailable; continuing", error); }
 
         // Local read-only diagnostic endpoint for inspecting captured GTCEu veins.
-        GtceuDebugWebServer.start(event.getServer());
+        try { GtceuDebugWebServer.start(event.getServer()); } catch (Throwable error) { LOGGER.warn("GTCEu web map startup failed; continuing", error); }
 
         // 根据配置启用/禁用 DEBUG 日志
         com.mapsyncer.util.ModLogConfig.applyDebugLogging();
@@ -128,11 +128,10 @@ public class MapSyncer {
     public void onServerStopping(ServerStoppingEvent event) {
         MinecraftForge.EVENT_BUS.unregister(this);
         IncrementalUpdateHandlerLogic.getInstance().stop();
-        GtceuDebugWebServer.stop();
+        try { GtceuDebugWebServer.stop(); } catch (Throwable error) { LOGGER.warn("GTCEu web map cleanup failed", error); }
     }
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
-        CacheGenerateCommand.register(event.getDispatcher(), "mapsyncer");
-    }
-}
+        LOGGER.info("MapSyncer commands disabled for runtime compatibility");
+    }}
