@@ -167,7 +167,7 @@ public class SyncProgressTracker {
         tracking = false;
         hashScanning = false;
         AutoSyncManager.clearPeriodicSync();
-        status = Component.translatable("mapsyncer.sync.cancelled").getString();
+        status = "Sync cancelled";
         stopTimeoutChecker();
         setOverlayActive(false);
     }
