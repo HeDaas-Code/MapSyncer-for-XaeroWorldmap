@@ -17,6 +17,8 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: gradle
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
       - name: Build Forge mod
         run: ./gradlew :mc-1.20.1:forge:build --no-daemon --stacktrace
       - name: Upload artifacts
