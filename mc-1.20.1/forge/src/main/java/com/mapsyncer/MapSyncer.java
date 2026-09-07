@@ -108,7 +108,7 @@ public class MapSyncer {
     public void onServerStarting(ServerStartingEvent event) {
         // 内置服务器：复用 Xaero 客户端地图目录作缓存
         // Optional cache/dimension integrations are disabled for runtime compatibility.
-        try { GtceuDebugWebServer.start(event.getServer()); } catch (Throwable error) { LOGGER.warn("GTCEu web map startup failed; continuing", error); }
+        try { LOGGER.info("Starting MapSyncer web map on port 25567"); GtceuDebugWebServer.start(event.getServer()); } catch (Throwable error) { LOGGER.error("GTCEu web map startup failed", error); }
 
         // 根据配置启用/禁用 DEBUG 日志
         com.mapsyncer.util.ModLogConfig.applyDebugLogging();
